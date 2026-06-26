@@ -1,9 +1,9 @@
-#' TreeShapeIndices
+#' TreeShapeIndicesC
 #'
 #' Tools for calculating universal tree shape indices from phylogenetic trees
 #' and subtrees.
 #'
-#' @useDynLib TreeShapeIndices, .registration = TRUE
+#' @useDynLib TreeShapeIndicesC, .registration = TRUE
 #' @importFrom Rcpp evalCpp
 #'
 #' @keywords internal
