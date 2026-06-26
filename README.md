@@ -6,10 +6,8 @@
 
 ```r
 install.packages("remotes")
-remotes::install_github("YOUR-GITHUB-USERNAME/TreeShapeIndices")
+remotes::install_github("ASC2302/TreeShapeIndices")
 ```
-
-Replace `YOUR-GITHUB-USERNAME` with the GitHub account or organisation that hosts the repository.
 
 ## Basic usage
 
