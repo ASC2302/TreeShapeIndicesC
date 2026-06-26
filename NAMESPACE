@@ -1,0 +1,10 @@
+# Generated manually for GitHub installation
+useDynLib(TreeShapeIndices, .registration = TRUE)
+importFrom(Rcpp, evalCpp)
+
+export(read_convert)
+export(all_indices)
+export(node)
+export(long_star)
+export(calculate_all_subtree_indices)
+export(process_tree_folder)
