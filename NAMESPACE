@@ -1,5 +1,5 @@
 # Generated manually for GitHub installation
-useDynLib(TreeShapeIndices, .registration = TRUE)
+useDynLib(TreeShapeIndicesC, .registration = TRUE)
 importFrom(Rcpp, evalCpp)
 
 export(read_convert)
