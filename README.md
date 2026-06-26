@@ -43,34 +43,3 @@ results <- calculate_all_subtree_indices(
 idx <- all_indices("C:/path/to/tree.nwk")
 idx
 ```
-
-## Development
-
-After changing the C++ exports, regenerate the Rcpp glue files with:
-
-```r
-Rcpp::compileAttributes()
-devtools::document()
-```
-
-Then test installation locally with:
-
-```r
-devtools::check()
-```
-
-## C++ source
-
-The main Rcpp source file is stored at:
-
-```text
-src/main_pipeline.cpp
-```
-
-After editing exported C++ functions, regenerate the Rcpp export files with:
-
-```r
-Rcpp::compileAttributes()
-devtools::document()
-```
-
