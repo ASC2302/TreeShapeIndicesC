@@ -1,10 +1,26 @@
+# Validate a TRUE/FALSE option used by the public wrappers.
+validate_logical_flag <- function(x, name) {
+  if (!is.logical(x) || length(x) != 1L || is.na(x)) {
+    stop("`", name, "` must be either TRUE or FALSE.", call. = FALSE)
+  }
+
+  x
+}
+
+
 # Validate a phylo object before calculation
 validate_phylo <- function(
   tr,
   allow_zero_lengths = TRUE,
   allow_missing_lengths = TRUE,
+  ignore_branch_lengths = FALSE,
   context = "tree"
 ) {
+  ignore_branch_lengths <- validate_logical_flag(
+    ignore_branch_lengths,
+    "ignore_branch_lengths"
+  )
+
   if (!inherits(tr, "phylo")) {
     stop(context, ": input is not a valid phylo object.", call. = FALSE)
   }
@@ -36,6 +52,12 @@ validate_phylo <- function(
       paste(duplicated_tips, collapse = ", "),
       call. = FALSE
     )
+  }
+
+  # The topology is still validated, but supplied edge-length values are not
+  # inspected because normalize_phylo() will replace all of them with 1.
+  if (ignore_branch_lengths) {
+    return(TRUE)
   }
 
   if (is.null(tr$edge.length) || length(tr$edge.length) == 0) {
@@ -216,25 +238,34 @@ validate_index_output <- function(
 
 
 # Make a phylo object safe to use/write:
-# - reject nonsense branch lengths
-# - add branch lengths if missing
+# - reject nonsense branch lengths unless they are deliberately ignored
+# - replace missing or ignored branch lengths with unit lengths
 # - remove invalid node labels
 normalize_phylo <- function(
   tr,
   allow_zero_lengths = TRUE,
   allow_missing_lengths = TRUE,
+  ignore_branch_lengths = FALSE,
   context = "tree"
 ) {
   if (!inherits(tr, "phylo")) return(tr)
+
+  ignore_branch_lengths <- validate_logical_flag(
+    ignore_branch_lengths,
+    "ignore_branch_lengths"
+  )
 
   validate_phylo(
     tr,
     allow_zero_lengths = allow_zero_lengths,
     allow_missing_lengths = allow_missing_lengths,
+    ignore_branch_lengths = ignore_branch_lengths,
     context = context
   )
 
-  if (is.null(tr$edge.length) || length(tr$edge.length) == 0) {
+  if (ignore_branch_lengths ||
+      is.null(tr$edge.length) ||
+      length(tr$edge.length) == 0) {
     tr$edge.length <- rep(1, nrow(tr$edge))
   }
 
@@ -246,14 +277,58 @@ normalize_phylo <- function(
 }
 
 
+resolve_node_abundances <- function(
+  node_abundances = NULL,
+  ignore_node_sizes = FALSE
+) {
+  ignore_node_sizes <- validate_logical_flag(
+    ignore_node_sizes,
+    "ignore_node_sizes"
+  )
+
+  if (ignore_node_sizes) NULL else node_abundances
+}
+
+
+prepare_index_inputs <- function(
+  file,
+  node_abundances = NULL,
+  ignore_branch_lengths = FALSE,
+  ignore_node_sizes = FALSE
+) {
+  ignore_branch_lengths <- validate_logical_flag(
+    ignore_branch_lengths,
+    "ignore_branch_lengths"
+  )
+
+  tree <- assert_single_phylo(
+    read_convert(
+      file,
+      ignore_branch_lengths = ignore_branch_lengths
+    )
+  )
+
+  list(
+    tree = tree,
+    node_abundances = resolve_node_abundances(
+      node_abundances,
+      ignore_node_sizes = ignore_node_sizes
+    )
+  )
+}
+
+
 safe_extract <- function(x) {
   if (is.null(x) || length(x) == 0) return(NA_real_)
   as.numeric(x)
 }
 
 
-safe_write_tree <- function(tr) {
-  tr <- normalize_phylo(tr)
+safe_write_tree <- function(tr, ignore_branch_lengths = FALSE) {
+  tr <- normalize_phylo(
+    tr,
+    ignore_branch_lengths = ignore_branch_lengths
+  )
   ape::write.tree(tr)
 }
 

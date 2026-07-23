@@ -13,20 +13,44 @@
 #' @param max_tips Maximum number of tips for subtrees to be included.
 #' @param include_full_tree Logical. Should the full tree also be included in
 #'   the results?
+#' @param node_abundances Optional node-abundance data frame. Labels not present
+#'   in a particular subtree are ignored by the C++ abundance lookup.
+#' @param ignore_branch_lengths Logical. Replace every edge length with 1 before
+#'   extracting and calculating subtrees.
+#' @param ignore_node_sizes Logical. Ignore `node_abundances` and use equal tip
+#'   abundance with zero direct abundance on internal nodes.
 #'
 #' @return A data frame containing calculated indices for each subtree, along
-#'   with metadata such as tree number, subtree number, root label, leaf count,
-#'   and calculation time.
+#' with metadata such as tree number, subtree number, root label, leaf count,
+#' and calculation time.
 #'
 #' @export
 calculate_all_subtree_indices <- function(
   file,
   min_tips = 0,
   max_tips = 20000,
-  include_full_tree = FALSE
+  include_full_tree = FALSE,
+  node_abundances = NULL,
+  ignore_branch_lengths = FALSE,
+  ignore_node_sizes = FALSE
 ) {
+  ignore_branch_lengths <- validate_logical_flag(
+    ignore_branch_lengths,
+    "ignore_branch_lengths"
+  )
+  ignore_node_sizes <- validate_logical_flag(
+    ignore_node_sizes,
+    "ignore_node_sizes"
+  )
+  node_abundances <- resolve_node_abundances(
+    node_abundances,
+    ignore_node_sizes = ignore_node_sizes
+  )
 
-  tree_obj <- read_convert(file)
+  tree_obj <- read_convert(
+    file,
+    ignore_branch_lengths = ignore_branch_lengths
+  )
   tree_list <- if (inherits(tree_obj, "multiPhylo")) tree_obj else list(tree_obj)
 
   results_list <- list()
@@ -39,6 +63,7 @@ calculate_all_subtree_indices <- function(
 
     tree <- normalize_phylo(
       tree_list[[tree_i]],
+      ignore_branch_lengths = ignore_branch_lengths,
       context = paste0("tree ", tree_i)
     )
 
@@ -67,6 +92,7 @@ calculate_all_subtree_indices <- function(
       function(i) {
         normalize_phylo(
           sts[[i]],
+          ignore_branch_lengths = ignore_branch_lengths,
           context = paste0("tree ", tree_i, ", generated subtree ", i)
         )
       }
@@ -90,17 +116,23 @@ calculate_all_subtree_indices <- function(
     }
 
     if (length(sts) > 0) {
-      tree_strings <- vapply(sts, safe_write_tree, character(1))
+      tree_strings <- vapply(
+        sts,
+        safe_write_tree,
+        character(1),
+        ignore_branch_lengths = ignore_branch_lengths
+      )
       sts <- sts[!duplicated(tree_strings)]
     }
 
-    message("  Number of trees/subtrees to process: ", length(sts))
+    message(" Number of trees/subtrees to process: ", length(sts))
 
     if (length(sts) == 0) next
 
     for (sub_i in seq_along(sts)) {
       st <- normalize_phylo(
         sts[[sub_i]],
+        ignore_branch_lengths = ignore_branch_lengths,
         context = paste0("tree ", tree_i, ", subtree ", sub_i)
       )
 
@@ -110,7 +142,12 @@ calculate_all_subtree_indices <- function(
       timing <- system.time({
         idx <- tryCatch(
           {
-            idx <- all_indices(st)
+            idx <- all_indices(
+              st,
+              node_abundances = node_abundances,
+              ignore_branch_lengths = ignore_branch_lengths,
+              ignore_node_sizes = ignore_node_sizes
+            )
 
             validate_index_output(
               idx,
@@ -164,7 +201,7 @@ calculate_all_subtree_indices <- function(
       row_counter <- row_counter + 1
 
       if (sub_i %% 25 == 0) {
-        message("   Processed ", sub_i, " subtrees")
+        message(" Processed ", sub_i, " subtrees")
       }
     }
   }

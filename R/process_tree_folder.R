@@ -12,9 +12,15 @@
 #' @param pattern File extension pattern used to find tree files.
 #' @param output_folder Folder where CSV files should be saved. Defaults to
 #'   `tree_folder`.
+#' @param node_abundances Optional node-abundance data frame to apply to the
+#'   trees. Labels absent from a tree or subtree receive zero direct abundance.
+#' @param ignore_branch_lengths Logical. Replace every edge length with 1 before
+#'   processing.
+#' @param ignore_node_sizes Logical. Ignore `node_abundances` and use equal tip
+#'   abundance with zero direct abundance on internal nodes.
 #'
 #' @return Invisibly returns a list of result data frames, one per input tree
-#'   file.
+#' file.
 #'
 #' @export
 process_tree_folder <- function(
@@ -23,8 +29,19 @@ process_tree_folder <- function(
   max_tips = 20000,
   include_full_tree = FALSE,
   pattern = "\\.(txt|nwk|tree|tre|nex|nexus)$",
-  output_folder = tree_folder
+  output_folder = tree_folder,
+  node_abundances = NULL,
+  ignore_branch_lengths = FALSE,
+  ignore_node_sizes = FALSE
 ) {
+  ignore_branch_lengths <- validate_logical_flag(
+    ignore_branch_lengths,
+    "ignore_branch_lengths"
+  )
+  ignore_node_sizes <- validate_logical_flag(
+    ignore_node_sizes,
+    "ignore_node_sizes"
+  )
 
   if (!dir.exists(tree_folder)) {
     stop("`tree_folder` does not exist: ", tree_folder, call. = FALSE)
@@ -68,7 +85,10 @@ process_tree_folder <- function(
           file = f,
           min_tips = min_tips,
           max_tips = max_tips,
-          include_full_tree = include_full_tree
+          include_full_tree = include_full_tree,
+          node_abundances = node_abundances,
+          ignore_branch_lengths = ignore_branch_lengths,
+          ignore_node_sizes = ignore_node_sizes
         )
 
         elapsed <- as.numeric(difftime(Sys.time(), start_time, units = "secs"))

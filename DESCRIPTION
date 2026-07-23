@@ -14,8 +14,10 @@ Imports:
     tictoc,
     tools,
     utils
-LinkingTo:
-    Rcpp
+LinkingTo: Rcpp
+Suggests:
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
 SystemRequirements: C++17
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
