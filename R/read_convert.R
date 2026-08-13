@@ -13,6 +13,17 @@
 #'
 #' @return A phylo or multiPhylo object.
 #'
+#' @examples
+#' tree_file <- tree_index_example("sim-taxa.nwk")
+#' tree <- read_convert(tree_file)
+#' ape::Ntip(tree)
+#'
+#' topology_tree <- read_convert(
+#'   tree_file,
+#'   ignore_branch_lengths = TRUE
+#' )
+#' unique(topology_tree$edge.length)
+#'
 #' @export
 read_convert <- function(file, ignore_branch_lengths = FALSE) {
   ignore_branch_lengths <- validate_logical_flag(

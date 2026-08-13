@@ -10,9 +10,50 @@ install.packages("remotes")
 remotes::install_github("ASC2302/TreeShapeIndicesC")
 ```
 
+## Bundled example data
+
+The package includes two raw Newick files under `inst/extdata/`:
+
+- `rphylo.nwk`, generated using `ape::rphylo(500, 1, 0)`;
+- `sim-taxa.nwk`, generated using
+  `TreeSimGM::sim.taxa(1, 500, waitsp = "rexp(1.2)")[[1]]`.
+
+Each file contains one rooted, fully bifurcating tree with 500 tips, unique tip
+labels, and positive branch lengths. Use `tree_index_example()` to locate the
+installed files:
+
+```r
+library(TreeShapeIndicesC)
+
+tree_index_example()
+
+rphylo_file <- tree_index_example("rphylo.nwk")
+rphylo_tree <- read_convert(rphylo_file)
+ape::Ntip(rphylo_tree)
+```
+
+A quick calculation can be demonstrated on a small section of either tree:
+
+```r
+example_tree <- ape::keep.tip(
+  rphylo_tree,
+  rphylo_tree$tip.label[seq_len(10)]
+)
+
+idx <- all_indices(
+  example_tree,
+  ignore_branch_lengths = TRUE
+)
+
+idx$J1N
+```
+
+The original files remain available so that the package's tree-reading
+interface can be tested as well as its calculations.
+
 ## Ignoring branch lengths and node sizes
 
-The public calculation functions now accept two independent logical options:
+The public calculation functions accept two independent logical options:
 
 ```r
 ignore_branch_lengths = FALSE
@@ -28,8 +69,6 @@ ignore_node_sizes = FALSE
 ### Full tree
 
 ```r
-library(TreeShapeIndicesC)
-
 idx <- all_indices(
   "C:/path/to/tree.nwk",
   node_abundances = node_sizes,

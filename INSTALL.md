@@ -1,37 +1,57 @@
-# Applying the TreeShapeIndicesC input-options patch
+# Applying the complete TreeShapeIndicesC patch
 
-1. Copy the contents of `modified/R` into the package's `R` directory.
-2. Copy `modified/src/RcppExports.cpp` into the package's `src` directory.
-3. Copy `modified/DESCRIPTION` and `modified/README.md` to the package root.
-4. Optionally copy the `tests` directory.
+This archive is an overlay for the `TreeShapeIndicesC` package. It includes the
+branch-length/node-size options, bundled example data, tests, and examples.
 
-From RStudio, set the working directory to the package root and run:
+## Copy the files
+
+From the extracted archive, copy the following into the package repository,
+allowing matching files to be replaced:
+
+- `R/` to the package's `R/` directory;
+- `src/RcppExports.cpp` to `src/RcppExports.cpp`;
+- `inst/` to the package root;
+- `tests/` to the package root;
+- `DESCRIPTION`, `NAMESPACE`, `README.md`, and `PATCH_NOTES.md` to the package
+  root.
+
+The raw data must finish at:
+
+```text
+inst/extdata/rphylo.nwk
+inst/extdata/sim-taxa.nwk
+```
+
+Do not copy these files into `data/`; they are raw Newick inputs and belong in
+`inst/extdata/`.
+
+## Regenerate and check the package
+
+Open the package project in RStudio and run from the package root:
 
 ```r
 Rcpp::compileAttributes()
 devtools::document()
 devtools::test()
+devtools::check()
 devtools::install()
 ```
 
-`Rcpp::compileAttributes()` is important for the current repository because its
-checked-in generated symbols still use the old package prefix
-`_TreeShapeIndices_`. Regenerating them under package name `TreeShapeIndicesC`
-creates the `_TreeShapeIndicesC_` symbols expected by the installed DLL.
+`Rcpp::compileAttributes()` is important because older generated files in the
+repository used the `_TreeShapeIndices_` prefix instead of
+`_TreeShapeIndicesC_`.
 
-## New arguments
+`devtools::document()` regenerates the `NAMESPACE` and help files, including the
+export and documentation for `tree_index_example()`.
 
-The following public functions accept both switches:
-
-- `all_indices()`
-- `node()`
-- `long_star()`
-- `calculate_all_subtree_indices()`
-- `process_tree_folder()`
+## Confirm the example files after installation
 
 ```r
-ignore_branch_lengths = FALSE
-ignore_node_sizes = FALSE
+library(TreeShapeIndicesC)
+
+tree_index_example()
+file.exists(tree_index_example("rphylo.nwk"))
+file.exists(tree_index_example("sim-taxa.nwk"))
 ```
 
-`read_convert()` also accepts `ignore_branch_lengths`.
+The expected result is two `TRUE` values.

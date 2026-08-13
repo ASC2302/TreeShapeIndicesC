@@ -15,6 +15,20 @@
 #'
 #' @return A list containing D0N, D1N, J1N, D0S, D1S, J1S, D0L, D1L, and J1L.
 #'
+#' @examples
+#' tree_file <- tree_index_example("rphylo.nwk")
+#' tree <- read_convert(tree_file)
+#'
+#' # Use a small section of the bundled tree so the example runs quickly.
+#' example_tree <- ape::keep.tip(tree, tree$tip.label[seq_len(10)])
+#'
+#' result <- all_indices(
+#'   example_tree,
+#'   ignore_branch_lengths = TRUE
+#' )
+#'
+#' result$J1N
+#'
 #' @export
 all_indices <- function(
   file,
