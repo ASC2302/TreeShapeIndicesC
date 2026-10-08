@@ -7,7 +7,7 @@ trees and subtrees using R and Rcpp.
 
 ```r
 install.packages("remotes")
-remotes::install_github("ASC2302/TreeShapeIndicesC")
+remotes::install_github("ASC2302/RUIindices2")
 ```
 
 ## Bundled example data
